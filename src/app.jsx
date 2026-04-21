@@ -5,7 +5,7 @@ function App() {
   const [hoveredAction, setHoveredAction] = useState(null);
   const [pricingTier, setPricingTier] = useState(1);
   const [addOns, setAddOns] = useState({ storage: false, snowGuards: false, critterGuards: false, evCharger: false, energyMonitor: false });
-  const [journeyPath, setJourneyPath] = useState(null); // null = not chosen yet, "forward" or "notForward"
+  const [journeyPath, setJourneyPath] = useState(null); // null = not chosen yet, "forward", "notForward", or "dq"
   const [customerIncentive, setCustomerIncentive] = useState("none"); // "none", "signup", "discount"
   
   const T = {
@@ -46,9 +46,16 @@ function App() {
     { id: 104, title: "Outcome Logged", status: "pending", date: "TBD" },
   ];
 
+  // Disqualified path
+  const dqSteps = [
+    { id: 201, title: "Disqualified", status: "pending", date: "TBD" },
+  ];
+
   // Combined steps for rendering (depends on selected path)
   const steps = journeyPath === "notForward"
     ? [...preSteps, ...notForwardSteps]
+    : journeyPath === "dq"
+    ? [...preSteps, ...dqSteps]
     : [...preSteps, ...forwardSteps];
 
   const quickActions = [
@@ -179,8 +186,8 @@ function App() {
             <div style={{ padding: "20px" }}>
               {steps.map((step, index) => {
                 const isBranchPoint = step.id === 4;
-                const isPostBranch = forwardSteps.some(s => s.id === step.id) || notForwardSteps.some(s => s.id === step.id);
-                const pathColor = journeyPath === "notForward" && isPostBranch ? T.red : (isPostBranch ? T.green : null);
+                const isPostBranch = forwardSteps.some(s => s.id === step.id) || notForwardSteps.some(s => s.id === step.id) || dqSteps.some(s => s.id === step.id);
+                const pathColor = (journeyPath === "notForward" && isPostBranch) ? T.red : (journeyPath === "dq" && isPostBranch) ? T.dim : (isPostBranch ? T.green : null);
 
                 return (
                 <div key={step.id}>
@@ -224,7 +231,7 @@ function App() {
                         <div style={{
                           width: "2px",
                           height: "24px",
-                          backgroundColor: journeyPath === "notForward" ? T.red : T.green,
+                          backgroundColor: journeyPath === "notForward" ? T.red : journeyPath === "dq" ? T.dim : T.green,
                           marginTop: "4px"
                         }} />
                       )}
@@ -270,7 +277,7 @@ function App() {
                   {isBranchPoint && (
                     <div style={{
                       display: "flex",
-                      gap: "6px",
+                      gap: "5px",
                       margin: "8px 0 8px 0",
                       padding: "0 4px"
                     }}>
@@ -318,7 +325,30 @@ function App() {
                           lineHeight: "1.3"
                         }}
                       >
-                        ❌ Not Moving<br/>Forward
+                        ❌ Not<br/>Forward
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setJourneyPath("dq");
+                          setActiveStep(201);
+                        }}
+                        style={{
+                          flex: "0 0 48px",
+                          padding: "8px 4px",
+                          borderRadius: "6px",
+                          border: `2px solid ${journeyPath === "dq" ? T.dim : T.border}`,
+                          backgroundColor: journeyPath === "dq" ? T.dim + "25" : T.border + "30",
+                          color: journeyPath === "dq" ? T.text : T.muted,
+                          fontSize: "10px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          textAlign: "center",
+                          lineHeight: "1.3"
+                        }}
+                      >
+                        🚫<br/>DQ
                       </button>
                     </div>
                   )}
@@ -1364,6 +1394,88 @@ function App() {
                   }}>
                     <strong style={{ color: T.accent }}>💡 Reminder:</strong>
                     <span style={{ color: T.muted }}> Set a 6-month calendar reminder. Utility rates keep rising — today's "no" is often tomorrow's "yes."</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* DISQUALIFIED PANEL */}
+            {activeStep === 201 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.dim + "20" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "20px" }}>🚫</span>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.text }}>Disqualified</h3>
+                  </div>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "24px" }}>
+                    <h4 style={{ margin: "0 0 14px 0", fontSize: "14px", color: T.muted, fontWeight: "600" }}>SELECT DQ REASON</h4>
+                    {[
+                      { key: "structural", label: "Structural", icon: "🏗️", desc: "Roof condition, age, or structural integrity cannot support solar installation" },
+                      { key: "electrical", label: "Electrical", icon: "⚡", desc: "Electrical panel insufficient, outdated wiring, or upgrade cost prohibitive" },
+                      { key: "credit", label: "Credit", icon: "💳", desc: "Customer does not meet credit requirements for financing/lease approval" }
+                    ].map((reason) => (
+                      <div key={reason.key} style={{
+                        backgroundColor: T.border + "20",
+                        border: `1px solid ${T.border}`,
+                        padding: "14px",
+                        borderRadius: "8px",
+                        marginBottom: "8px",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "18px" }}>{reason.icon}</span>
+                          <strong style={{ fontSize: "14px" }}>{reason.label}</strong>
+                        </div>
+                        <div style={{ fontSize: "12px", color: T.muted, marginLeft: "28px" }}>{reason.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.muted, fontWeight: "600" }}>📝 DQ NOTES</h4>
+                    <div style={{
+                      backgroundColor: T.border + "20",
+                      border: `1px solid ${T.border}`,
+                      padding: "12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      minHeight: "80px",
+                      color: T.muted,
+                      fontStyle: "italic"
+                    }}>
+                      Add details about the disqualification — assessor findings, specific issues, etc...
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: T.green + "10",
+                    border: `1px solid ${T.green}30`,
+                    padding: "12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    marginBottom: "12px"
+                  }}>
+                    <strong style={{ color: T.green }}>🔀 Issue resolved?</strong>
+                    <div style={{ color: T.muted, marginTop: "4px", marginBottom: "8px" }}>If the DQ issue has been fixed (e.g. roof repaired, panel upgraded), move back to the forward path.</div>
+                    <button
+                      onClick={() => { setJourneyPath("forward"); setActiveStep(5); }}
+                      style={{
+                        backgroundColor: T.green + "20",
+                        color: T.green,
+                        border: `1px solid ${T.green}`,
+                        padding: "8px 16px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        width: "100%"
+                      }}
+                    >
+                      ✅ Re-qualify — Switch to Moving Forward
+                    </button>
                   </div>
                 </div>
               </>
