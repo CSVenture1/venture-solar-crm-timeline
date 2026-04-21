@@ -5,6 +5,8 @@ function App() {
   const [hoveredAction, setHoveredAction] = useState(null);
   const [pricingTier, setPricingTier] = useState(1);
   const [addOns, setAddOns] = useState({ storage: false, snowGuards: false, critterGuards: false, evCharger: false, energyMonitor: false });
+  const [journeyPath, setJourneyPath] = useState(null); // null = not chosen yet, "forward" or "notForward"
+  const [customerIncentive, setCustomerIncentive] = useState("none"); // "none", "signup", "discount"
   
   const T = {
     bg: "#0A0D10",
@@ -18,11 +20,16 @@ function App() {
     dim: "#4A5568",
   };
 
-  const steps = [
+  // Steps before the branch point (shared)
+  const preSteps = [
     { id: 1, title: "Appointment Scheduled", status: "completed", date: "Dec 15, 2024 5:00 PM" },
     { id: 2, title: "Photon Path Walk Around", status: "current", date: "During Visit" },
     { id: 3, title: "Aurora Design Session", status: "pending", date: "During Visit" },
     { id: 4, title: "Proposal Presentation", status: "pending", date: "During Visit" },
+  ];
+
+  // Moving Forward path
+  const forwardSteps = [
     { id: 5, title: "Site Assessment", status: "pending", date: "TBD" },
     { id: 6, title: "RSM Call", status: "pending", date: "TBD" },
     { id: 7, title: "Contract & Financing", status: "pending", date: "TBD" },
@@ -30,6 +37,19 @@ function App() {
     { id: 9, title: "Referrals & Lawn Sign Photo", status: "pending", date: "TBD" },
     { id: 10, title: "Deal Approved", status: "pending", date: "TBD" }
   ];
+
+  // Not Moving Forward path
+  const notForwardSteps = [
+    { id: 101, title: "Objection Notes", status: "pending", date: "TBD" },
+    { id: 102, title: "Follow-Up Scheduled", status: "pending", date: "TBD" },
+    { id: 103, title: "Re-Engagement Attempt", status: "pending", date: "TBD" },
+    { id: 104, title: "Outcome Logged", status: "pending", date: "TBD" },
+  ];
+
+  // Combined steps for rendering (depends on selected path)
+  const steps = journeyPath === "notForward"
+    ? [...preSteps, ...notForwardSteps]
+    : [...preSteps, ...forwardSteps];
 
   const quickActions = [
     { label: "Scan Utility Bill", icon: "📄" },
@@ -157,82 +177,159 @@ function App() {
             </div>
             
             <div style={{ padding: "20px" }}>
-              {steps.map((step, index) => (
-                <div 
-                  key={step.id}
-                  onClick={() => setActiveStep(step.id)}
-                  style={{ 
-                    display: "flex", 
-                    alignItems: "flex-start", 
-                    marginBottom: index === steps.length - 1 ? "0" : "8px",
-                    cursor: "pointer",
-                    padding: "8px 10px",
-                    borderRadius: "6px",
-                    backgroundColor: activeStep === step.id ? T.border + "50" : "transparent",
-                    border: `1px solid ${activeStep === step.id ? T.accent + "30" : "transparent"}`
-                  }}
-                >
-                  <div style={{ 
-                    position: "relative", 
-                    marginRight: "16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                  }}>
+              {steps.map((step, index) => {
+                const isBranchPoint = step.id === 4;
+                const isPostBranch = forwardSteps.some(s => s.id === step.id) || notForwardSteps.some(s => s.id === step.id);
+                const pathColor = journeyPath === "notForward" && isPostBranch ? T.red : (isPostBranch ? T.green : null);
+
+                return (
+                <div key={step.id}>
+                  <div
+                    onClick={() => setActiveStep(step.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      marginBottom: (isBranchPoint && !journeyPath) ? "0" : "0",
+                      cursor: "pointer",
+                      padding: "8px 10px",
+                      borderRadius: "6px",
+                      backgroundColor: activeStep === step.id ? T.border + "50" : "transparent",
+                      border: `1px solid ${activeStep === step.id ? T.accent + "30" : "transparent"}`
+                    }}
+                  >
                     <div style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      backgroundColor: getStepStatus(step),
-                      border: `2px solid ${getStepStatus(step)}30`,
-                      zIndex: 1
-                    }} />
-                    {index < steps.length - 1 && (
+                      position: "relative",
+                      marginRight: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center"
+                    }}>
                       <div style={{
-                        width: "2px",
-                        height: "24px",
-                        backgroundColor: T.border,
-                        marginTop: "4px"
+                        width: "10px",
+                        height: "10px",
+                        borderRadius: "50%",
+                        backgroundColor: pathColor || getStepStatus(step),
+                        border: `2px solid ${(pathColor || getStepStatus(step))}30`,
+                        zIndex: 1
                       }} />
-                    )}
-                  </div>
-                  
-                  <div style={{ flex: 1 }}>
-                    <div style={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
-                      alignItems: "center",
-                      marginBottom: "4px"
-                    }}>
-                      <h3 style={{
-                        margin: 0,
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: activeStep === step.id ? T.accent : T.text
+                      {index < steps.length - 1 && !isBranchPoint && (
+                        <div style={{
+                          width: "2px",
+                          height: "24px",
+                          backgroundColor: pathColor || T.border,
+                          marginTop: "4px"
+                        }} />
+                      )}
+                      {isBranchPoint && journeyPath && (
+                        <div style={{
+                          width: "2px",
+                          height: "24px",
+                          backgroundColor: journeyPath === "notForward" ? T.red : T.green,
+                          marginTop: "4px"
+                        }} />
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "4px"
                       }}>
-                        {step.title}
-                      </h3>
-                      {step.status !== "pending" && <span style={{
-                        fontSize: "10px",
+                        <h3 style={{
+                          margin: 0,
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: activeStep === step.id ? T.accent : T.text
+                        }}>
+                          {step.title}
+                        </h3>
+                        {step.status !== "pending" && <span style={{
+                          fontSize: "10px",
+                          color: T.muted,
+                          fontFamily: "'JetBrains Mono', monospace"
+                        }}>
+                          {step.date}
+                        </span>}
+                      </div>
+                      <div style={{
+                        fontSize: "12px",
                         color: T.muted,
-                        fontFamily: "'JetBrains Mono', monospace"
+                        textTransform: "uppercase",
+                        fontWeight: "500"
                       }}>
-                        {step.date}
-                      </span>}
-                    </div>
-                    <div style={{ 
-                      fontSize: "12px", 
-                      color: T.muted,
-                      textTransform: "uppercase",
-                      fontWeight: "500"
-                    }}>
-                      {step.status === "completed" && "✅ Completed"}
-                      {step.status === "current" && "🔄 In Progress"}
-                      {step.status === "pending" && "⏳ Pending"}
+                        {step.status === "completed" && "✅ Completed"}
+                        {step.status === "current" && "🔄 In Progress"}
+                        {step.status === "pending" && "⏳ Pending"}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Branch buttons after Proposal Presentation */}
+                  {isBranchPoint && (
+                    <div style={{
+                      display: "flex",
+                      gap: "6px",
+                      margin: "8px 0 8px 0",
+                      padding: "0 4px"
+                    }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setJourneyPath("forward");
+                          setActiveStep(5);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "8px 4px",
+                          borderRadius: "6px",
+                          border: `2px solid ${journeyPath === "forward" ? T.green : T.border}`,
+                          backgroundColor: journeyPath === "forward" ? T.green + "15" : T.border + "30",
+                          color: journeyPath === "forward" ? T.green : T.muted,
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          textAlign: "center",
+                          lineHeight: "1.3"
+                        }}
+                      >
+                        ✅ Moving<br/>Forward
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setJourneyPath("notForward");
+                          setActiveStep(101);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "8px 4px",
+                          borderRadius: "6px",
+                          border: `2px solid ${journeyPath === "notForward" ? T.red : T.border}`,
+                          backgroundColor: journeyPath === "notForward" ? T.red + "15" : T.border + "30",
+                          color: journeyPath === "notForward" ? T.red : T.muted,
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          textAlign: "center",
+                          lineHeight: "1.3"
+                        }}
+                      >
+                        ❌ Not Moving<br/>Forward
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Spacer between steps (only when not at branch point without path) */}
+                  {!isBranchPoint && index < steps.length - 1 && (
+                    <div style={{ height: "8px" }} />
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -489,6 +586,94 @@ function App() {
                         <span style={{ color: T.green, fontWeight: "600" }}>${(selected.tier === 0 ? 560 : selected.tier === 1 ? 1120 : 1680).toLocaleString()}</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Customer Incentive Toggle */}
+                  <div style={{ marginBottom: "24px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.accent, fontWeight: "600" }}>🎁 CUSTOMER INCENTIVE</h4>
+                    <div style={{ display: "flex", borderRadius: "6px", overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: "12px" }}>
+                      {[
+                        { key: "none", label: "No Incentive" },
+                        { key: "signup", label: "Sign-Up Bonus" },
+                        { key: "discount", label: "Rate Discount" }
+                      ].map((opt) => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setCustomerIncentive(opt.key)}
+                          style={{
+                            flex: 1,
+                            padding: "8px 4px",
+                            border: "none",
+                            backgroundColor: customerIncentive === opt.key ? T.accent : T.border + "30",
+                            color: customerIncentive === opt.key ? T.bg : T.muted,
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {customerIncentive === "signup" && (
+                      <div style={{
+                        backgroundColor: T.green + "10",
+                        border: `1px solid ${T.green}30`,
+                        padding: "14px",
+                        borderRadius: "6px"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <strong style={{ fontSize: "13px", color: T.green }}>Sign-Up Bonus Applied</strong>
+                          <span style={{ fontSize: "10px", backgroundColor: T.green + "20", color: T.green, padding: "2px 6px", borderRadius: "3px" }}>ACTIVE</span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: T.muted, marginBottom: "8px" }}>One-time cash bonus credited after installation is complete.</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "12px" }}>
+                          <div><span style={{ color: T.muted }}>Bonus:</span> <strong style={{ color: T.green }}>$500</strong></div>
+                          <div><span style={{ color: T.muted }}>Paid:</span> After install</div>
+                        </div>
+                        <div style={{ fontSize: "11px", color: T.muted, marginTop: "8px", fontStyle: "italic" }}>
+                          Note: Bonus comes from rep commission — reduces payout by $500.
+                        </div>
+                      </div>
+                    )}
+
+                    {customerIncentive === "discount" && (
+                      <div style={{
+                        backgroundColor: T.green + "10",
+                        border: `1px solid ${T.green}30`,
+                        padding: "14px",
+                        borderRadius: "6px"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <strong style={{ fontSize: "13px", color: T.green }}>Monthly Rate Discount Applied</strong>
+                          <span style={{ fontSize: "10px", backgroundColor: T.green + "20", color: T.green, padding: "2px 6px", borderRadius: "3px" }}>ACTIVE</span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: T.muted, marginBottom: "8px" }}>Reduces the customer's per-kWh rate for the first 12 months.</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "12px" }}>
+                          <div><span style={{ color: T.muted }}>Discount:</span> <strong style={{ color: T.green }}>-1¢/kWh</strong></div>
+                          <div><span style={{ color: T.muted }}>Duration:</span> 12 months</div>
+                          <div><span style={{ color: T.muted }}>New rate (yr 1):</span> <strong style={{ color: T.green }}>{selected.tier === 0 ? "18¢" : selected.tier === 1 ? "19¢" : "20¢"}/kWh</strong></div>
+                          <div><span style={{ color: T.muted }}>After yr 1:</span> {selected.customerRate}/kWh</div>
+                        </div>
+                        <div style={{ fontSize: "11px", color: T.muted, marginTop: "8px", fontStyle: "italic" }}>
+                          Note: Discount subsidized from rep commission — reduces payout accordingly.
+                        </div>
+                      </div>
+                    )}
+
+                    {customerIncentive === "none" && (
+                      <div style={{
+                        backgroundColor: T.border + "20",
+                        padding: "12px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        color: T.muted
+                      }}>
+                        No customer incentive applied. Standard pricing in effect.
+                      </div>
+                    )}
                   </div>
 
                   {/* Quick Compare */}
@@ -914,6 +1099,271 @@ function App() {
                     <div style={{ fontSize: "11px", color: T.muted, marginTop: "8px" }}>
                       Status: <span style={{ color: T.accent }}>⏳ No photo uploaded yet</span>
                     </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* NOT MOVING FORWARD PATH PANELS */}
+            {activeStep === 101 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Objection Notes</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>🚫 WHY NOT MOVING FORWARD?</h4>
+                    <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
+                      {[
+                        { label: "Price too high", key: "price" },
+                        { label: "Needs to discuss with spouse/partner", key: "spouse" },
+                        { label: "Wants more quotes", key: "quotes" },
+                        { label: "Roof concerns", key: "roof" },
+                        { label: "Not ready / timing", key: "timing" },
+                        { label: "Financing concerns", key: "financing" },
+                        { label: "Doesn't trust solar", key: "trust" },
+                        { label: "Other", key: "other" }
+                      ].map((reason) => (
+                        <div key={reason.key} style={{
+                          backgroundColor: T.border + "20",
+                          border: `1px solid ${T.border}`,
+                          padding: "10px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px"
+                        }}>
+                          <div style={{
+                            width: "18px", height: "18px", borderRadius: "4px",
+                            border: `2px solid ${T.dim}`, flexShrink: 0
+                          }} />
+                          {reason.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>📝 REP NOTES</h4>
+                    <div style={{
+                      backgroundColor: T.border + "20",
+                      border: `1px solid ${T.border}`,
+                      padding: "12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      minHeight: "80px",
+                      color: T.muted,
+                      fontStyle: "italic"
+                    }}>
+                      Click to add detailed notes about the customer's objections, tone, and any potential openings for future outreach...
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: T.accent + "10",
+                    border: `1px solid ${T.accent}30`,
+                    padding: "12px",
+                    borderRadius: "6px",
+                    fontSize: "12px"
+                  }}>
+                    <strong style={{ color: T.accent }}>💡 Tip:</strong>
+                    <span style={{ color: T.muted }}> Detailed objection notes help with re-engagement. Customers who say "not now" often convert within 6 months.</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeStep === 102 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Follow-Up Scheduled</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>📅 SCHEDULE FOLLOW-UP</h4>
+                    <div style={{ backgroundColor: T.border + "30", padding: "12px", borderRadius: "6px", fontSize: "12px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "12px" }}>
+                        <div><span style={{ color: T.muted }}>Follow-up Type:</span> <strong>Phone Call</strong></div>
+                        <div><span style={{ color: T.muted }}>Priority:</span> <span style={{ color: T.accent }}>Medium</span></div>
+                        <div><span style={{ color: T.muted }}>Date:</span> TBD</div>
+                        <div><span style={{ color: T.muted }}>Assigned To:</span> Alex Thompson</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>⏰ SUGGESTED TIMING</h4>
+                    {[
+                      { label: "1 Week", desc: "Quick check-in while interest is warm" },
+                      { label: "2 Weeks", desc: "Give time to discuss with partner" },
+                      { label: "1 Month", desc: "Let them get another utility bill" },
+                      { label: "3 Months", desc: "Seasonal rate change re-engagement" }
+                    ].map((opt, i) => (
+                      <div key={i} style={{
+                        backgroundColor: T.border + "20",
+                        border: `1px solid ${T.border}`,
+                        padding: "10px 12px",
+                        borderRadius: "6px",
+                        marginBottom: "6px",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}>
+                        <div>
+                          <strong>{opt.label}</strong>
+                          <div style={{ color: T.muted, fontSize: "11px", marginTop: "2px" }}>{opt.desc}</div>
+                        </div>
+                        <div style={{ color: T.dim, fontSize: "16px" }}>→</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>📧 AUTOMATED NURTURE</h4>
+                    <div style={{ backgroundColor: T.border + "20", padding: "12px", borderRadius: "6px", fontSize: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <span>Add to drip email campaign</span>
+                        <span style={{ color: T.muted }}>⏳ Not enrolled</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>Send rate increase alerts</span>
+                        <span style={{ color: T.muted }}>⏳ Not enrolled</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeStep === 103 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Re-Engagement Attempt</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>🔄 RE-ENGAGEMENT LOG</h4>
+                    <div style={{ backgroundColor: T.border + "20", padding: "12px", borderRadius: "6px", fontSize: "12px", color: T.muted, fontStyle: "italic", marginBottom: "12px" }}>
+                      No re-engagement attempts logged yet.
+                    </div>
+                    <button style={{
+                      backgroundColor: T.accent,
+                      color: T.bg,
+                      border: "none",
+                      padding: "10px 20px",
+                      borderRadius: "6px",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      width: "100%",
+                      marginBottom: "8px"
+                    }}>
+                      📞 Log Call Attempt
+                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button style={{
+                        flex: 1, backgroundColor: T.border, color: T.text, border: `1px solid ${T.border}`,
+                        padding: "8px", borderRadius: "6px", fontSize: "12px", cursor: "pointer"
+                      }}>📧 Log Email</button>
+                      <button style={{
+                        flex: 1, backgroundColor: T.border, color: T.text, border: `1px solid ${T.border}`,
+                        padding: "8px", borderRadius: "6px", fontSize: "12px", cursor: "pointer"
+                      }}>💬 Log Text</button>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: T.green + "10",
+                    border: `1px solid ${T.green}30`,
+                    padding: "12px",
+                    borderRadius: "6px",
+                    fontSize: "12px"
+                  }}>
+                    <strong style={{ color: T.green }}>🔀 Changed their mind?</strong>
+                    <div style={{ color: T.muted, marginTop: "4px", marginBottom: "8px" }}>If the customer wants to move forward, switch back to the forward path.</div>
+                    <button
+                      onClick={() => { setJourneyPath("forward"); setActiveStep(5); }}
+                      style={{
+                        backgroundColor: T.green + "20",
+                        color: T.green,
+                        border: `1px solid ${T.green}`,
+                        padding: "8px 16px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        width: "100%"
+                      }}
+                    >
+                      ✅ Switch to Moving Forward
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeStep === 104 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Outcome Logged</h3>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>📋 FINAL OUTCOME</h4>
+                    {[
+                      { label: "Lost — Went with competitor", icon: "🏢" },
+                      { label: "Lost — Decided against solar", icon: "🚫" },
+                      { label: "Lost — Moved / sold home", icon: "🏠" },
+                      { label: "Nurture — May revisit later", icon: "🔄" },
+                      { label: "Unresponsive — Could not reach", icon: "📵" }
+                    ].map((outcome, i) => (
+                      <div key={i} style={{
+                        backgroundColor: T.border + "20",
+                        border: `1px solid ${T.border}`,
+                        padding: "12px",
+                        borderRadius: "6px",
+                        marginBottom: "6px",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                      }}>
+                        <span style={{ fontSize: "16px" }}>{outcome.icon}</span>
+                        {outcome.label}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.red, fontWeight: "600" }}>📝 CLOSING NOTES</h4>
+                    <div style={{
+                      backgroundColor: T.border + "20",
+                      border: `1px solid ${T.border}`,
+                      padding: "12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      minHeight: "60px",
+                      color: T.muted,
+                      fontStyle: "italic"
+                    }}>
+                      Add final notes for this opportunity...
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: T.accent + "10",
+                    border: `1px solid ${T.accent}30`,
+                    padding: "12px",
+                    borderRadius: "6px",
+                    fontSize: "12px"
+                  }}>
+                    <strong style={{ color: T.accent }}>💡 Reminder:</strong>
+                    <span style={{ color: T.muted }}> Set a 6-month calendar reminder. Utility rates keep rising — today's "no" is often tomorrow's "yes."</span>
                   </div>
                 </div>
               </>
