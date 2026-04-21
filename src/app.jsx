@@ -260,7 +260,10 @@ function App() {
               borderBottom: `1px solid ${T.border}`,
               backgroundColor: T.border + "30"
             }}>
-              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>Customer Journey Timeline</h2>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>Customer Journey Timeline</h2>
+                <span style={{ fontSize: "9px", color: T.dim }}>v3</span>
+              </div>
             </div>
             
             <div style={{ padding: "20px" }}>
