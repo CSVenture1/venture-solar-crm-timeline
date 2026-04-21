@@ -7,6 +7,7 @@ function App() {
   const [addOns, setAddOns] = useState({ storage: false, snowGuards: false, critterGuards: false, evCharger: false, energyMonitor: false });
   const [journeyPath, setJourneyPath] = useState(null); // null = not chosen yet, "forward", "notForward", or "dq"
   const [customerIncentive, setCustomerIncentive] = useState("none"); // "none", "signup", "discount"
+  const [rightPanelView, setRightPanelView] = useState("details"); // "details" or "activity"
   
   const T = {
     bg: "#0A0D10",
@@ -57,6 +58,85 @@ function App() {
     : journeyPath === "dq"
     ? [...preSteps, ...dqSteps]
     : [...preSteps, ...forwardSteps];
+
+  const touchpoints = [
+    { id: 1, date: "Dec 15, 2024", time: "5:15 PM", type: "meeting", icon: "🤝", who: "Alex Thompson", direction: "In-Person",
+      title: "Appointment — Home Visit",
+      detail: "Met with Robert & Jennifer. Walked the property, inspected roof and electrical panel. Customers very engaged, asked lots of questions about pricing and timeline. Jennifer concerned about aesthetics. Robert focused on ROI.",
+      result: "Positive — moving to Aurora design" },
+    { id: 2, date: "Dec 15, 2024", time: "4:45 PM", type: "auto_email", icon: "🤖", who: "System", direction: "Outbound",
+      title: "Automated — Appointment Reminder",
+      detail: "Reminder email sent: 'Your solar consultation with Alex Thompson is tomorrow at 5:00 PM.'",
+      result: "Delivered ✓" },
+    { id: 3, date: "Dec 14, 2024", time: "2:30 PM", type: "call", icon: "📞", who: "Alex Thompson", direction: "Outbound",
+      title: "Pre-appointment confirmation call",
+      detail: "Called Robert to confirm tomorrow's appointment. He confirmed 5 PM works. Asked him to have a recent utility bill ready. He mentioned his neighbor just got solar installed by a competitor.",
+      result: "Confirmed — 2 min" },
+    { id: 4, date: "Dec 12, 2024", time: "10:00 AM", type: "auto_text", icon: "🤖", who: "System", direction: "Outbound",
+      title: "Automated — Appointment Confirmation Text",
+      detail: "SMS: 'Hi Robert, you're confirmed for a solar consultation on Dec 15 at 5:00 PM with Alex Thompson. Reply STOP to cancel.'",
+      result: "Delivered ✓" },
+    { id: 5, date: "Dec 11, 2024", time: "3:15 PM", type: "call", icon: "📞", who: "Sarah Mitchell", direction: "Outbound",
+      title: "Inside Sales — Booking Call",
+      detail: "Sarah called Robert from Solar Reviews lead. Discussed rising utility costs — his bill jumped from $200 to $287. Booked in-home appointment with Alex Thompson for Dec 15.",
+      result: "Appointment booked — 12 min" },
+    { id: 6, date: "Dec 11, 2024", time: "2:45 PM", type: "auto_email", icon: "🤖", who: "System", direction: "Outbound",
+      title: "Automated — Lead Response Email",
+      detail: "Instant response email sent after Solar Reviews inquiry: 'Thank you for your interest in solar! A Venture Home Solar specialist will call you shortly.'",
+      result: "Delivered ✓ — Opened ✓" },
+    { id: 7, date: "Dec 11, 2024", time: "2:40 PM", type: "inquiry", icon: "🌐", who: "Robert Martinez", direction: "Inbound",
+      title: "Solar Reviews — New Inquiry",
+      detail: "Online form submission: 'Eversource keeps raising rates. Interested in solar for my home. Have a south-facing roof. Looking for financing options.'",
+      result: "Lead created" },
+    { id: 8, date: "Nov 10, 2024", time: "11:00 AM", type: "call", icon: "📞", who: "Inside Sales", direction: "Outbound",
+      title: "Re-engagement call",
+      detail: "Follow-up from previous inquiry. Robert said roof repair is done, ready to discuss solar again. Wife Jennifer also on the line — both interested.",
+      result: "Re-engaged — 12 min" },
+    { id: 9, date: "Nov 08, 2024", time: "9:20 AM", type: "inquiry", icon: "🌐", who: "Robert Martinez", direction: "Inbound",
+      title: "Solar Reviews — New Inquiry (2nd)",
+      detail: "Second inquiry: 'Bills are getting too high. Roof was just fixed. Ready to seriously look at solar now.'",
+      result: "Lead re-opened" },
+    { id: 10, date: "Jul 18, 2023", time: "4:00 PM", type: "email", icon: "📧", who: "Robert Martinez", direction: "Inbound",
+      title: "Email response to follow-up",
+      detail: "Robert replied: 'Thanks for checking in. Roof repair is done now. I'll reach out when I'm ready to revisit solar.'",
+      result: "Noted — set 3-month reminder" },
+    { id: 11, date: "Jul 15, 2023", time: "10:30 AM", type: "auto_email", icon: "🤖", who: "System", direction: "Outbound",
+      title: "Automated — 90-day follow-up email",
+      detail: "Drip campaign email: 'Hi Robert, just checking in. Eversource rates have gone up again. Still thinking about solar? We'd love to help.'",
+      result: "Delivered ✓ — Opened ✓ — Replied ✓" },
+    { id: 12, date: "Mar 15, 2023", time: "10:00 AM", type: "meeting", icon: "🤝", who: "Mike Chen", direction: "In-Person",
+      title: "Initial Consultation — Home Visit",
+      detail: "First in-home visit. Customer interested but roof needs repair first (missing shingles on south side). Discussed general pricing and timeline. Decided to wait until roof is fixed.",
+      result: "Not ready — waiting on roof repair — 45 min" },
+    { id: 13, date: "Mar 01, 2023", time: "2:15 PM", type: "call", icon: "📞", who: "Robert Martinez", direction: "Inbound",
+      title: "Inbound call — pricing questions",
+      detail: "Robert called in asking about pricing and timeline. Discussed general ranges. He mentioned roof might need repair first.",
+      result: "Info provided — 8 min" },
+    { id: 14, date: "Feb 28, 2023", time: "11:00 AM", type: "inquiry", icon: "🌐", who: "Robert Martinez", direction: "Inbound",
+      title: "Solar Reviews — Initial Inquiry",
+      detail: "First contact: Website form submission expressing initial interest in residential solar.",
+      result: "Lead created" },
+  ];
+
+  const typeColors = {
+    meeting: T.accent,
+    call: T.green,
+    email: "#60A5FA",
+    text: "#A78BFA",
+    auto_email: T.dim,
+    auto_text: T.dim,
+    inquiry: "#F472B6",
+  };
+
+  const typeLabels = {
+    meeting: "Meeting",
+    call: "Call",
+    email: "Email",
+    text: "Text",
+    auto_email: "Auto Email",
+    auto_text: "Auto Text",
+    inquiry: "Inquiry",
+  };
 
   const quickActions = [
     { label: "Scan Utility Bill", icon: "📄" },
@@ -372,7 +452,185 @@ function App() {
             border: `1px solid ${T.border}`,
             overflow: "hidden"
           }}>
-            {activeStep === 1 && (
+            {/* Tab Toggle */}
+            <div style={{
+              display: "flex",
+              borderBottom: `1px solid ${T.border}`,
+              backgroundColor: T.bg
+            }}>
+              <button
+                onClick={() => setRightPanelView("details")}
+                style={{
+                  flex: 1,
+                  padding: "10px 16px",
+                  border: "none",
+                  borderBottom: rightPanelView === "details" ? `2px solid ${T.accent}` : "2px solid transparent",
+                  backgroundColor: "transparent",
+                  color: rightPanelView === "details" ? T.accent : T.muted,
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                Step Details
+              </button>
+              <button
+                onClick={() => setRightPanelView("activity")}
+                style={{
+                  flex: 1,
+                  padding: "10px 16px",
+                  border: "none",
+                  borderBottom: rightPanelView === "activity" ? `2px solid ${T.accent}` : "2px solid transparent",
+                  backgroundColor: "transparent",
+                  color: rightPanelView === "activity" ? T.accent : T.muted,
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                Activity Log ({touchpoints.length})
+              </button>
+            </div>
+
+            {/* Activity Log View */}
+            {rightPanelView === "activity" && (
+              <>
+                <div style={{
+                  padding: "16px 20px",
+                  borderBottom: `1px solid ${T.border}`,
+                  backgroundColor: T.border + "30"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Customer Touchpoints</h3>
+                    <span style={{ fontSize: "11px", color: T.muted }}>{touchpoints.length} interactions</span>
+                  </div>
+                  {/* Type filter chips */}
+                  <div style={{ display: "flex", gap: "6px", marginTop: "12px", flexWrap: "wrap" }}>
+                    {Object.entries(typeLabels).map(([key, label]) => {
+                      const count = touchpoints.filter(t => t.type === key).length;
+                      if (count === 0) return null;
+                      return (
+                        <span key={key} style={{
+                          backgroundColor: typeColors[key] + "15",
+                          color: typeColors[key],
+                          border: `1px solid ${typeColors[key]}30`,
+                          padding: "3px 8px",
+                          borderRadius: "12px",
+                          fontSize: "10px",
+                          fontWeight: "600"
+                        }}>
+                          {label} ({count})
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ padding: "16px 20px", maxHeight: "calc(100vh - 340px)", overflowY: "auto" }}>
+                  {touchpoints.map((tp, i) => {
+                    const color = typeColors[tp.type] || T.muted;
+                    const isLast = i === touchpoints.length - 1;
+                    return (
+                      <div key={tp.id} style={{ display: "flex", gap: "12px", marginBottom: isLast ? 0 : "0" }}>
+                        {/* Timeline line + dot */}
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          flexShrink: 0,
+                          width: "20px"
+                        }}>
+                          <div style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            backgroundColor: color,
+                            border: `2px solid ${color}40`,
+                            flexShrink: 0,
+                            marginTop: "4px"
+                          }} />
+                          {!isLast && (
+                            <div style={{
+                              width: "1px",
+                              flex: 1,
+                              backgroundColor: T.border,
+                              minHeight: "20px"
+                            }} />
+                          )}
+                        </div>
+                        {/* Content */}
+                        <div style={{
+                          flex: 1,
+                          paddingBottom: isLast ? 0 : "16px"
+                        }}>
+                          {/* Date + type badge */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                            <div style={{ fontSize: "11px", color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
+                              {tp.date} · {tp.time}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{
+                                fontSize: "9px",
+                                fontWeight: "600",
+                                textTransform: "uppercase",
+                                color: tp.direction === "Inbound" ? T.green : tp.direction === "Outbound" ? T.accent : T.muted,
+                                opacity: 0.8
+                              }}>
+                                {tp.direction}
+                              </span>
+                              <span style={{
+                                backgroundColor: color + "20",
+                                color: color,
+                                padding: "2px 6px",
+                                borderRadius: "3px",
+                                fontSize: "9px",
+                                fontWeight: "700",
+                                textTransform: "uppercase"
+                              }}>
+                                {tp.icon} {typeLabels[tp.type]}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Title */}
+                          <div style={{ fontSize: "13px", fontWeight: "600", marginBottom: "4px", color: T.text }}>
+                            {tp.title}
+                          </div>
+                          {/* Who */}
+                          <div style={{ fontSize: "11px", color: T.muted, marginBottom: "6px" }}>
+                            {tp.who}
+                          </div>
+                          {/* Detail */}
+                          <div style={{
+                            fontSize: "12px",
+                            color: T.muted,
+                            lineHeight: "1.5",
+                            backgroundColor: T.border + "15",
+                            padding: "8px 10px",
+                            borderRadius: "4px",
+                            borderLeft: `2px solid ${color}40`,
+                            marginBottom: "6px"
+                          }}>
+                            {tp.detail}
+                          </div>
+                          {/* Result */}
+                          <div style={{
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            color: color
+                          }}>
+                            → {tp.result}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Step Details View */}
+            {rightPanelView === "details" && activeStep === 1 && (
               <>
                 <div style={{ 
                   padding: "20px", 
@@ -474,7 +732,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 2 && (
+            {rightPanelView === "details" && activeStep === 2 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Photon Path Walk Around</h3>
@@ -502,7 +760,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 3 && (
+            {rightPanelView === "details" && activeStep === 3 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Aurora Design Session</h3>
@@ -532,7 +790,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 4 && (() => {
+            {rightPanelView === "details" && activeStep === 4 && (() => {
               const pricingOptions = [
                 { tier: 0, customerRate: "19¢", customerRateNum: 0.19, commission: "$0.05/W", commissionLabel: "5¢/W", label: "Value", monthlyBill: "$152", annualSavings: "$1,620", systemCost: "$24,200" },
                 { tier: 1, customerRate: "20¢", customerRateNum: 0.20, commission: "$0.10/W", commissionLabel: "10¢/W", label: "Standard", monthlyBill: "$160", annualSavings: "$1,524", systemCost: "$25,500" },
@@ -855,7 +1113,7 @@ function App() {
               );
             })()}
 
-            {activeStep === 5 && (
+            {rightPanelView === "details" && activeStep === 5 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Site Assessment</h3>
@@ -930,7 +1188,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 6 && (
+            {rightPanelView === "details" && activeStep === 6 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>RSM Call</h3>
@@ -1030,7 +1288,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 8 && (
+            {rightPanelView === "details" && activeStep === 8 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Venture App Enrollment</h3>
@@ -1076,7 +1334,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 9 && (
+            {rightPanelView === "details" && activeStep === 9 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Referrals & Lawn Sign Photo</h3>
@@ -1135,7 +1393,7 @@ function App() {
             )}
 
             {/* NOT MOVING FORWARD PATH PANELS */}
-            {activeStep === 101 && (
+            {rightPanelView === "details" && activeStep === 101 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Objection Notes</h3>
@@ -1205,7 +1463,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 102 && (
+            {rightPanelView === "details" && activeStep === 102 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Follow-Up Scheduled</h3>
@@ -1269,7 +1527,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 103 && (
+            {rightPanelView === "details" && activeStep === 103 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Re-Engagement Attempt</h3>
@@ -1336,7 +1594,7 @@ function App() {
               </>
             )}
 
-            {activeStep === 104 && (
+            {rightPanelView === "details" && activeStep === 104 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.red + "10" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: T.red }}>Outcome Logged</h3>
@@ -1400,7 +1658,7 @@ function App() {
             )}
 
             {/* DISQUALIFIED PANEL */}
-            {activeStep === 201 && (
+            {rightPanelView === "details" && activeStep === 201 && (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.dim + "20" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
