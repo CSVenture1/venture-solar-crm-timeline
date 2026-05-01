@@ -9,6 +9,8 @@ function App() {
   const [customerIncentive, setCustomerIncentive] = useState("none"); // "none", "signup", "discount"
   const [rightPanelView, setRightPanelView] = useState("details"); // "details" or "activity"
   const [veraCompleted, setVeraCompleted] = useState(false); // whether homeowner completed Vera discovery
+  const [showLoadCalc, setShowLoadCalc] = useState(false);
+  const [loadCalcValues, setLoadCalcValues] = useState({ hvac: 1500, waterHeater: 400, appliances: 300, lighting: 150, ev: 0, other: 200 });
   
   const T = {
     bg: "#0A0D10",
@@ -1025,12 +1027,198 @@ function App() {
                 { tier: 2, customerRate: "21¢", customerRateNum: 0.21, commission: "$0.15/W", commissionLabel: "15¢/W", label: "Premium", monthlyBill: "$168", annualSavings: "$1,428", systemCost: "$26,800" }
               ];
               const selected = pricingOptions[pricingTier];
+
+              const utilityData = [
+                { month: "Jan", kwh: 1120, bill: 318 },
+                { month: "Feb", kwh: 1050, bill: 298 },
+                { month: "Mar", kwh: 880, bill: 250 },
+                { month: "Apr", kwh: 720, bill: 204 },
+                { month: "May", kwh: 680, bill: 193 },
+                { month: "Jun", kwh: 950, bill: 270 },
+                { month: "Jul", kwh: 1380, bill: 392 },
+                { month: "Aug", kwh: 1420, bill: 403 },
+                { month: "Sep", kwh: 1050, bill: 298 },
+                { month: "Oct", kwh: 780, bill: 221 },
+                { month: "Nov", kwh: 890, bill: 253 },
+                { month: "Dec", kwh: 1080, bill: 307 }
+              ];
+              const maxKwh = Math.max(...utilityData.map(d => d.kwh));
+              const totalKwh = utilityData.reduce((sum, d) => sum + d.kwh, 0);
+              const avgBill = Math.round(utilityData.reduce((sum, d) => sum + d.bill, 0) / utilityData.length);
+              const loadCalcTotal = Object.values(loadCalcValues).reduce((sum, v) => sum + v, 0);
+
               return (
               <>
                 <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Proposal Presentation</h3>
                 </div>
                 <div style={{ padding: "20px" }}>
+
+                  {/* Utility Bill Insights */}
+                  <div style={{ marginBottom: "24px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.accent, fontWeight: "600" }}>⚡ UTILITY BILL INSIGHTS</h4>
+
+                    {/* Summary stats */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+                      <div style={{ backgroundColor: T.border + "30", padding: "10px", borderRadius: "6px", textAlign: "center" }}>
+                        <div style={{ fontSize: "10px", color: T.muted, marginBottom: "2px" }}>Avg Monthly</div>
+                        <div style={{ fontSize: "18px", fontWeight: "700", color: T.red, fontFamily: "'JetBrains Mono', monospace" }}>${avgBill}</div>
+                      </div>
+                      <div style={{ backgroundColor: T.border + "30", padding: "10px", borderRadius: "6px", textAlign: "center" }}>
+                        <div style={{ fontSize: "10px", color: T.muted, marginBottom: "2px" }}>Annual kWh</div>
+                        <div style={{ fontSize: "18px", fontWeight: "700", color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{totalKwh.toLocaleString()}</div>
+                      </div>
+                      <div style={{ backgroundColor: T.border + "30", padding: "10px", borderRadius: "6px", textAlign: "center" }}>
+                        <div style={{ fontSize: "10px", color: T.muted, marginBottom: "2px" }}>Peak Month</div>
+                        <div style={{ fontSize: "18px", fontWeight: "700", color: T.text, fontFamily: "'JetBrains Mono', monospace" }}>Aug</div>
+                      </div>
+                    </div>
+
+                    {/* Bar Graph */}
+                    <div style={{ backgroundColor: T.bg, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "14px" }}>
+                      <div style={{ fontSize: "11px", color: T.muted, marginBottom: "10px", fontWeight: "600" }}>MONTHLY USAGE (kWh)</div>
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", height: "120px" }}>
+                        {utilityData.map((d, i) => (
+                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
+                            <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                              <div style={{ fontSize: "8px", color: T.muted, textAlign: "center", marginBottom: "2px" }}>
+                                {d.kwh}
+                              </div>
+                              <div style={{
+                                width: "100%",
+                                height: `${(d.kwh / maxKwh) * 100}%`,
+                                backgroundColor: d.kwh > 1200 ? T.red + "80" : d.kwh > 900 ? T.accent + "80" : T.green + "80",
+                                borderRadius: "3px 3px 0 0",
+                                minHeight: "4px",
+                                transition: "height 0.3s"
+                              }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
+                        {utilityData.map((d, i) => (
+                          <div key={i} style={{ flex: 1, textAlign: "center", fontSize: "9px", color: T.muted }}>{d.month}</div>
+                        ))}
+                      </div>
+                      {/* Legend */}
+                      <div style={{ display: "flex", gap: "12px", marginTop: "10px", justifyContent: "center" }}>
+                        {[{ color: T.red + "80", label: ">1200 kWh" }, { color: T.accent + "80", label: "900-1200" }, { color: T.green + "80", label: "<900" }].map((l, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", color: T.muted }}>
+                            <div style={{ width: "8px", height: "8px", borderRadius: "2px", backgroundColor: l.color }} />
+                            {l.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Month-over-month breakdown */}
+                    <div style={{ marginTop: "12px", backgroundColor: T.border + "20", borderRadius: "6px", padding: "10px", fontSize: "11px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", color: T.muted, fontWeight: "600", marginBottom: "6px", paddingBottom: "4px", borderBottom: `1px solid ${T.border}` }}>
+                        <span>Month</span><span>kWh</span><span>Bill</span><span>vs Prev</span>
+                      </div>
+                      {utilityData.map((d, i) => {
+                        const prev = i > 0 ? utilityData[i - 1].kwh : d.kwh;
+                        const change = Math.round(((d.kwh - prev) / prev) * 100);
+                        return (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", color: T.text }}>
+                            <span style={{ width: "40px" }}>{d.month}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{d.kwh.toLocaleString()}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>${d.bill}</span>
+                            <span style={{ color: change > 0 ? T.red : change < 0 ? T.green : T.muted, fontWeight: "600" }}>
+                              {i === 0 ? "—" : `${change > 0 ? "+" : ""}${change}%`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Load Calculator */}
+                  <div style={{ marginBottom: "24px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <h4 style={{ margin: 0, fontSize: "14px", color: T.accent, fontWeight: "600" }}>🔌 LOAD CALCULATOR</h4>
+                      <button
+                        onClick={() => setShowLoadCalc(!showLoadCalc)}
+                        style={{
+                          backgroundColor: showLoadCalc ? T.accent + "20" : T.border,
+                          color: showLoadCalc ? T.accent : T.muted,
+                          border: `1px solid ${showLoadCalc ? T.accent + "40" : T.border}`,
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          fontSize: "10px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {showLoadCalc ? "Hide" : "Use Calculator"}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: "11px", color: T.muted, marginBottom: "10px" }}>
+                      Use when less than 12 months of utility data is available to estimate annual usage.
+                    </div>
+
+                    {showLoadCalc && (
+                      <div style={{ backgroundColor: T.bg, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "14px" }}>
+                        {[
+                          { key: "hvac", label: "HVAC / Heating & Cooling", icon: "🌡️" },
+                          { key: "waterHeater", label: "Water Heater", icon: "🚿" },
+                          { key: "appliances", label: "Kitchen & Appliances", icon: "🍳" },
+                          { key: "lighting", label: "Lighting & Electronics", icon: "💡" },
+                          { key: "ev", label: "EV Charging", icon: "🔌" },
+                          { key: "other", label: "Other / Misc", icon: "📦" }
+                        ].map((item) => (
+                          <div key={item.key} style={{ marginBottom: "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                              <span style={{ fontSize: "11px" }}>{item.icon} {item.label}</span>
+                              <span style={{ fontSize: "11px", fontFamily: "'JetBrains Mono', monospace", color: T.accent }}>{loadCalcValues[item.key]} kWh/mo</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={item.key === "hvac" ? "3000" : item.key === "ev" ? "1500" : "1000"}
+                              step="50"
+                              value={loadCalcValues[item.key]}
+                              onChange={(e) => setLoadCalcValues(prev => ({ ...prev, [item.key]: Number(e.target.value) }))}
+                              style={{
+                                width: "100%",
+                                height: "4px",
+                                appearance: "none",
+                                WebkitAppearance: "none",
+                                background: T.border,
+                                borderRadius: "2px",
+                                outline: "none",
+                                cursor: "pointer"
+                              }}
+                            />
+                          </div>
+                        ))}
+
+                        {/* Load calc total */}
+                        <div style={{
+                          marginTop: "12px",
+                          paddingTop: "12px",
+                          borderTop: `1px solid ${T.border}`,
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "8px"
+                        }}>
+                          <div style={{ backgroundColor: T.border + "30", padding: "10px", borderRadius: "6px", textAlign: "center" }}>
+                            <div style={{ fontSize: "10px", color: T.muted, marginBottom: "2px" }}>Est. Monthly</div>
+                            <div style={{ fontSize: "18px", fontWeight: "700", color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{loadCalcTotal.toLocaleString()} <span style={{ fontSize: "10px", color: T.muted }}>kWh</span></div>
+                          </div>
+                          <div style={{ backgroundColor: T.border + "30", padding: "10px", borderRadius: "6px", textAlign: "center" }}>
+                            <div style={{ fontSize: "10px", color: T.muted, marginBottom: "2px" }}>Est. Annual</div>
+                            <div style={{ fontSize: "18px", fontWeight: "700", color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{(loadCalcTotal * 12).toLocaleString()} <span style={{ fontSize: "10px", color: T.muted }}>kWh</span></div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "10px", color: T.muted, textAlign: "center", marginTop: "8px", fontStyle: "italic" }}>
+                          Based on estimated loads — adjust sliders to match customer's actual usage patterns
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Pricing Slider */}
                   <div style={{ marginBottom: "24px" }}>
                     <h4 style={{ margin: "0 0 16px 0", fontSize: "14px", color: T.accent, fontWeight: "600" }}>💲 PRICING TIER</h4>
