@@ -741,7 +741,55 @@ function App() {
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Photon Path Walk Around</h3>
                 </div>
                 <div style={{ padding: "20px" }}>
-                  <div style={{ marginBottom: "16px" }}>
+                  {/* Send Photon Path to Customer */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <button style={{
+                      backgroundColor: T.accent,
+                      color: T.bg,
+                      border: "none",
+                      padding: "12px 20px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      width: "100%",
+                      marginBottom: "8px"
+                    }}>
+                      📱 Send Photon Path to Customer
+                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button style={{
+                        flex: 1,
+                        backgroundColor: T.border,
+                        color: T.text,
+                        border: `1px solid ${T.border}`,
+                        padding: "8px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        cursor: "pointer"
+                      }}>
+                        📧 Send via Email
+                      </button>
+                      <button style={{
+                        flex: 1,
+                        backgroundColor: T.border,
+                        color: T.text,
+                        border: `1px solid ${T.border}`,
+                        padding: "8px",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        cursor: "pointer"
+                      }}>
+                        💬 Send via Text
+                      </button>
+                    </div>
+                    <div style={{ fontSize: "11px", color: T.muted, marginTop: "6px" }}>
+                      Status: <span style={{ color: T.accent }}>⏳ Not sent yet</span>
+                    </div>
+                  </div>
+
+                  {/* Photo Documentation */}
+                  <div style={{ marginBottom: "20px" }}>
                     <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: T.accent }}>📸 PHOTO DOCUMENTATION</h4>
                     <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: T.muted }}>Capture roof condition, obstacles, electrical panel</p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -757,6 +805,25 @@ function App() {
                           📷 {photo}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Walk Around Notes */}
+                  <div>
+                    <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: T.accent }}>📝 WALK AROUND NOTES</h4>
+                    <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: T.muted }}>Document observations during the property walk around</p>
+                    <div style={{
+                      backgroundColor: T.border + "20",
+                      border: `1px solid ${T.border}`,
+                      padding: "12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      minHeight: "120px",
+                      color: T.muted,
+                      fontStyle: "italic",
+                      lineHeight: "1.6"
+                    }}>
+                      Click to add notes — roof condition, shading, obstructions, electrical panel location, attic access, customer questions or concerns during the walk around...
                     </div>
                   </div>
                 </div>
