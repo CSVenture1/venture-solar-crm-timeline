@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+const APP_VERSION = "v4";
 function App() {
   const [activeStep, setActiveStep] = useState(1);
   const [hoveredAction, setHoveredAction] = useState(null);
@@ -264,7 +264,7 @@ function App() {
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>Customer Journey Timeline</h2>
-                <span style={{ fontSize: "9px", color: T.dim }}>v3</span>
+                <span style={{ fontSize: "9px", color: T.dim }}>{APP_VERSION}</span>
               </div>
             </div>
             
