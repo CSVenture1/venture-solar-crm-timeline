@@ -8,6 +8,7 @@ function App() {
   const [journeyPath, setJourneyPath] = useState(null); // null = not chosen yet, "forward", "notForward", or "dq"
   const [customerIncentive, setCustomerIncentive] = useState("none"); // "none", "signup", "discount"
   const [rightPanelView, setRightPanelView] = useState("details"); // "details" or "activity"
+  const [veraCompleted, setVeraCompleted] = useState(false); // whether homeowner completed Vera discovery
   
   const T = {
     bg: "#0A0D10",
@@ -24,7 +25,8 @@ function App() {
   // Steps before the branch point (shared)
   const preSteps = [
     { id: 1, title: "Appointment Scheduled", status: "completed", date: "Dec 15, 2024 5:00 PM" },
-    { id: 2, title: "Photon Path Walk Around", status: "current", date: "During Visit" },
+    { id: 15, title: "Vera Discovery", status: veraCompleted ? "completed" : "current", date: veraCompleted ? "Dec 14, 2024" : "Awaiting Response" },
+    { id: 2, title: "Photon Path Walk Around", status: veraCompleted ? "current" : "pending", date: "During Visit" },
     { id: 3, title: "Aurora Design Session", status: "pending", date: "During Visit" },
     { id: 4, title: "Proposal Presentation", status: "pending", date: "During Visit" },
   ];
@@ -731,6 +733,162 @@ function App() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </>
+            )}
+
+            {rightPanelView === "details" && activeStep === 15 && (
+              <>
+                <div style={{ padding: "20px", borderBottom: `1px solid ${T.border}`, backgroundColor: T.border + "30" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Vera Discovery</h3>
+                    <button
+                      onClick={() => setVeraCompleted(!veraCompleted)}
+                      style={{
+                        backgroundColor: veraCompleted ? T.green + "20" : T.accent + "20",
+                        color: veraCompleted ? T.green : T.accent,
+                        border: `1px solid ${veraCompleted ? T.green : T.accent}40`,
+                        padding: "4px 10px",
+                        borderRadius: "4px",
+                        fontSize: "10px",
+                        fontWeight: "600",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {veraCompleted ? "✅ Completed" : "⏳ Pending"}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ padding: "20px" }}>
+                  {!veraCompleted ? (
+                    <>
+                      {/* Send Vera to homeowner */}
+                      <div style={{ marginBottom: "20px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.accent, fontWeight: "600" }}>📱 SEND TO HOMEOWNER</h4>
+                        <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: T.muted }}>Send the Vera Discovery questionnaire to the homeowner before the appointment so the rep arrives prepared.</p>
+                        <button style={{
+                          backgroundColor: T.accent,
+                          color: T.bg,
+                          border: "none",
+                          padding: "12px 20px",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          width: "100%",
+                          marginBottom: "8px"
+                        }}>
+                          🔗 Send Vera Link to Homeowner
+                        </button>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button style={{
+                            flex: 1, backgroundColor: T.border, color: T.text,
+                            border: `1px solid ${T.border}`, padding: "8px",
+                            borderRadius: "6px", fontSize: "12px", cursor: "pointer"
+                          }}>📧 Email</button>
+                          <button style={{
+                            flex: 1, backgroundColor: T.border, color: T.text,
+                            border: `1px solid ${T.border}`, padding: "8px",
+                            borderRadius: "6px", fontSize: "12px", cursor: "pointer"
+                          }}>💬 Text</button>
+                        </div>
+                        <div style={{ fontSize: "11px", color: T.muted, marginTop: "6px" }}>
+                          Status: <span style={{ color: T.accent }}>⏳ Not sent yet</span>
+                        </div>
+                      </div>
+
+                      {/* Live Chat / Vera Preview */}
+                      <div style={{ marginBottom: "20px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.accent, fontWeight: "600" }}>💬 VERA CHAT PREVIEW</h4>
+                        <div style={{
+                          backgroundColor: T.bg,
+                          border: `1px solid ${T.border}`,
+                          borderRadius: "8px",
+                          padding: "16px",
+                          minHeight: "200px"
+                        }}>
+                          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                            <div style={{
+                              width: "28px", height: "28px", borderRadius: "50%",
+                              backgroundColor: T.accent + "20", display: "flex",
+                              alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0
+                            }}>🤖</div>
+                            <div style={{
+                              backgroundColor: T.border + "30", padding: "10px 12px",
+                              borderRadius: "12px", borderTopLeftRadius: "4px",
+                              fontSize: "12px", lineHeight: "1.5", maxWidth: "80%"
+                            }}>
+                              Hi Robert! I'm Vera, your solar discovery assistant. I have a few quick questions to help your Venture Solar rep prepare for your upcoming appointment. Ready to get started?
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "center", color: T.muted, fontSize: "11px", padding: "12px 0" }}>
+                            Waiting for homeowner to start the conversation...
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{
+                        backgroundColor: T.accent + "10",
+                        border: `1px solid ${T.accent}30`,
+                        padding: "12px",
+                        borderRadius: "6px",
+                        fontSize: "12px"
+                      }}>
+                        <strong style={{ color: T.accent }}>💡 Tip:</strong>
+                        <span style={{ color: T.muted }}> Sending Vera before the appointment increases close rates by giving the rep insight into the homeowner's priorities, concerns, and budget expectations.</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Vera Discovery Summary */}
+                      <div style={{ marginBottom: "20px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: T.green, fontWeight: "600" }}>✅ DISCOVERY SUMMARY</h4>
+                        <div style={{ fontSize: "11px", color: T.muted, marginBottom: "12px" }}>Completed Dec 14, 2024 at 3:42 PM · 8 min conversation</div>
+
+                        {[
+                          { label: "Primary Motivation", value: "Rising utility bills — went from $200 to $287/mo this year", icon: "💡" },
+                          { label: "Decision Makers", value: "Robert & Jennifer (both need to agree)", icon: "👥" },
+                          { label: "Timeline", value: "Want to move quickly, ideally install by spring", icon: "📅" },
+                          { label: "Budget Comfort", value: "Current bill is $287, comfortable up to $200/mo for solar", icon: "💰" },
+                          { label: "Roof Info", value: "South-facing, repaired mid-2023, ~15 years old", icon: "🏠" },
+                          { label: "Top Concerns", value: "Roof damage from panels, what happens if they move", icon: "⚠️" },
+                          { label: "Neighbor Influence", value: "Neighbor got solar and loves it — competitive motivation", icon: "🏘️" },
+                          { label: "Energy Usage", value: "High AC usage in summer, 2 EVs planned in next year", icon: "⚡" }
+                        ].map((item, i) => (
+                          <div key={i} style={{
+                            backgroundColor: T.border + "20",
+                            padding: "12px",
+                            borderRadius: "6px",
+                            marginBottom: "6px",
+                            fontSize: "12px"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                              <span>{item.icon}</span>
+                              <strong style={{ color: T.accent }}>{item.label}</strong>
+                            </div>
+                            <div style={{ color: T.text, marginLeft: "22px", lineHeight: "1.4" }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Rep Coaching Notes */}
+                      <div style={{
+                        backgroundColor: T.accent + "10",
+                        border: `1px solid ${T.accent}30`,
+                        padding: "14px",
+                        borderRadius: "6px",
+                        fontSize: "12px"
+                      }}>
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "13px", color: T.accent, fontWeight: "600" }}>🎯 REP COACHING</h4>
+                        <div style={{ color: T.muted, lineHeight: "1.5" }}>
+                          <div style={{ marginBottom: "6px" }}>→ Lead with ROI — they're motivated by bill savings, show the math</div>
+                          <div style={{ marginBottom: "6px" }}>→ Address roof concerns early — explain racking and warranty</div>
+                          <div style={{ marginBottom: "6px" }}>→ Both spouses present — make sure Jennifer feels included</div>
+                          <div>→ Mention neighbor's system — social proof is strong here</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             )}
